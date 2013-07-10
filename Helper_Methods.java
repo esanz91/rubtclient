@@ -34,19 +34,35 @@ public class Helper_Methods {
         }
         return hex.toString();
     }
-    public static int getPort(){
 
-    
+    public static int getPort() {
+
+
         for (int i = 6881; i <= 6889; i++) {
-                  try {
-                     ServerSocket port= new ServerSocket(i);
-                        int listenport;
-                       return listenport = i;
-                      } catch (IOException e) {
-                      System.out.println("Unable to create sSocket at port " + i);
-                      }
-                }
+            try {
+                ServerSocket port = new ServerSocket(i);
+                int listenport;
+                return listenport = i;
+            } catch (IOException e) {
+                System.out.println("Unable to create sSocket at port " + i);
+            }
+        }
         System.out.println("Unable to create Socket. Stopping Now!");
-            return -1;
+        return -1;
+    }
+
+    public static byte[] generatePeerId() {
+        Random rand = new Random(System.currentTimeMillis());
+        byte[] peerId = new byte[20];
+        //peerId cannot start with RUBT so just picked random characters
+        peerId[0] = 'J';  
+        peerId[1] = 'B';
+        peerId[2] = 'E';
+        peerId[3] = 'S';
+
+        for (int i = 4; i < 20; ++i) {
+            peerId[i] = (byte) ('A' + rand.nextInt(26));
+        }
+        return peerId;
     }
 }
