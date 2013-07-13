@@ -127,6 +127,9 @@ public class RUBTClient {
 		/* Print Statements */
 		/* ================ */	
 		System.out.println("Initializing RUBTClient. ");
+		System.out.println("Torrent File Name: " + torrentName);
+		System.out.println("Destination File Name: " + destinationName);
+		System.out.println("Peer ID: " + client.getPeerId());
 		System.out.println("bytesDownloaded: " + client.bytesDownloaded);
 		System.out.println("bytesUploaded: " + client.bytesUploaded);
 		System.out.println("bytesRemaining: " + client.bytesRemaining);
@@ -147,13 +150,16 @@ public class RUBTClient {
 		System.out.println("trackerPort: " + tracker.getTrackerPort());
 		System.out.println("trackerInterval: " + tracker.getTrackerInterval());
 		
-		/** Connects to tracker */         
-		tracker.connect(0,0,client.bytesRemaining, "started");
 		
 		/* ================ */
 		/* Print Statements */
 		/* ================ */	
 		System.out.println("Connecting to Tracker. ");
+		
+		/** Connects to tracker */         
+		tracker.connect(0,0,client.bytesRemaining, "started");
+		
+		
 		
 		
 		/** Checks if connection was successful */
