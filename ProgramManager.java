@@ -25,7 +25,7 @@ import java.util.Vector;
 
 public class ProgramManager {
 
-  private TrackerGetr tracker;
+	private TrackerGetr tracker;
 	private TorrentInfo torrent;
 	private String[] peerList;
 	private RUBTClient 					client;
