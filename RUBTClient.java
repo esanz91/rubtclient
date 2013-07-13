@@ -3,6 +3,7 @@ package RUBTClient;
 import java.io.*;
 import java.util.Random;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * RUBTClient Class
@@ -30,7 +31,7 @@ public class RUBTClient {
 	public static String peerID;
 
 	/** Peer Information */
-	public static String[] peer;
+	public static ArrayList<Peer> peer;
 	
 	/** Download Information */
 	public int bytesDownloaded;
@@ -121,13 +122,40 @@ public class RUBTClient {
 
 		/** Initialize Client */
 		client = new RUBTClient(args[0], args[1]);
+		 
+		/* ================ */
+		/* Print Statements */
+		/* ================ */	
+		System.out.println("Initializing RUBTClient. ");
+		System.out.println("bytesDownloaded: " + client.bytesDownloaded);
+		System.out.println("bytesUploaded: " + client.bytesUploaded);
+		System.out.println("bytesRemaining: " + client.bytesRemaining);
+		System.out.println("numPieces: " + client.getNumPieces());
+		System.out.println("numBlocks: " + client.getNumBlocks());
+		System.out.println("numBlkPieceRatio: " + client.getNumBlkPieceRatio());
+		System.out.println("numBlkLastPiece: " + client.getNumBlkLastPiece());
 
 		/** Initialize Tracker */
 		tracker = new TrackerGetr(client, torrent);
-
+		
+		/* ================ */
+		/* Print Statements */
+		/* ================ */	
+		System.out.println("Initializing Tracker. ");
+		System.out.println("trackerUrl: " + tracker.getTrackerUrl());
+		System.out.println("trackerIP: " + tracker.getTrackerIP());
+		System.out.println("trackerPort: " + tracker.getTrackerPort());
+		System.out.println("trackerInterval: " + tracker.getTrackerInterval());
+		
 		/** Connects to tracker */         
 		tracker.connect(0,0,client.bytesRemaining, "started");
-
+		
+		/* ================ */
+		/* Print Statements */
+		/* ================ */	
+		System.out.println("Connecting to Tracker. ");
+		
+		
 		/** Checks if connection was successful */
 		/*
 		if(trackerResponse == null){
@@ -291,6 +319,21 @@ public class RUBTClient {
 	/** Retrieves number of pieces */
 	public int getNumPieces(){
 		return numPieces;
+	}
+	
+	/** Retrieves number of blocks */
+	public int getNumBlocks(){
+		return numBlocks;
+	}
+	
+	/** Retrieves number of blocks per piece */
+	public int getNumBlkPieceRatio() {
+		return numBlkPieceRatio;
+	}
+	
+	/** Retrieves number of blocks in last piece */
+	public int getNumBlkLastPiece() {
+		return numBlkLastPiece;
 	}
 
 	/** Retrieves peer ID */
