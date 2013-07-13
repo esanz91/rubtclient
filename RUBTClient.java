@@ -39,7 +39,7 @@ public class RUBTClient {
 	public int bytesRemaining;
 	public static String event;
 
-	public static final int blockLength = 16384;
+	public static final int blockLength = 16384;  /* 16384 = 2^14*/
 	public static int numPieces = 0;
 	public static int numBlocks = 0;
 	public static int numBlkPieceRatio = 0;
