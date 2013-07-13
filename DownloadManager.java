@@ -23,17 +23,16 @@ import java.util.Vector;
  */
 
 
-public class ProgramManager {
+public class DownloadManager {
 
 	private TrackerGetr tracker;
 	private TorrentInfo torrent;
-	private String[] peerList;
+	private ArrayList<Peer> peerList;
 	private RUBTClient 					client;
 	private boolean 					stillRunning;
 	
-	private Calendar					cal;
-	private Object						waiting_list_lock;
-	public ProgramManager(RUBTClient r,TrackerGetr t)
+
+	public DownloadManager(RUBTClient r,TrackerGetr t)
 	{
 		client = r;
 		torrent = r.getTorrentInfo();
@@ -47,7 +46,7 @@ public class ProgramManager {
 	
 	/* +++++++++++++++++++++++++++++++ GET METHODS +++++++++++++++++++++++++++++++++++ */	
 	
-	String[] getPeerList()
+	ArrayList<Peer> getPeerList()
 	{
 		return peerList;
 	}
