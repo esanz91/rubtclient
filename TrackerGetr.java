@@ -50,15 +50,25 @@ public class TrackerGetr {
 	private static URL trackerUrl;
 	private static String trackerIP;
 	private static int trackerPort;
+	private static int trackerInterval;
 	
 	/** Connection Information */
 	private static URL requestedURL;
 	private static String[] peerList ; 
 	static int listeningPort = -1;
 	
+	/** keyINTERVAL */
+	public static final ByteBuffer keyINTERVAL = ByteBuffer.wrap(new byte[] {
+			'i', 'n', 't', 'e', 'r', 'v', 'a', 'l' });
+
+	/** keyPEERS */
+	public static final ByteBuffer keyPEERS = ByteBuffer.wrap(new byte[] { 'p',
+			'e', 'e', 'r', 's' });
 	
-	/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-	/** Tracker Constructor */
+	
+	/* ================================================================================ */
+	/* 								Tracker Constructor									*/  
+	/* ================================================================================ */
 	TrackerGetr(RUBTClient c, TorrentInfo t) {		
 		
 		/** Fill in Client Information */
@@ -75,21 +85,27 @@ public class TrackerGetr {
 	
 	
 	
+	/* ================================================================================ */
+	/* 									METHODS  										*/  
+	/* ================================================================================ */
 	
-	public byte[] connect(int bytesDown, int bytesUp, int bytesRemaining, String event) throws IOException {
+	public void connect(int bytesDown, int bytesUp, int bytesRemaining, String event) throws IOException {
 
 		/** Variables */
 		Socket trkSocket = null;
 		URL trkURL = null;
 		HttpURLConnection trkConnection = null;
-		byte[] trkByteResponse = null;
- 		Map trkResponse = null;
+		
+		DataInputStream trackerData;
+ 		int size;
+ 		
+		byte[] trkDataByteArray = null;
+		Map<ByteBuffer, Object> trkMapResponse = null;
 		
 		/** Verify Tracker was initialized */
 		if (trackerUrl == null)
 		{
 			System.err.println("Tracker was not created properly. ");
-			return null;
 		}
 		
 		/** Open socket in order to communicate with tracker */
@@ -100,7 +116,6 @@ public class TrackerGetr {
 		catch(Exception e)
 		{
 			System.err.println("ERROR: Unable to create socket at " + trackerIP + ":" + trackerPort);
-			return null;
 		}
 		
 		/** Create tracker HTTP URL connection */
@@ -112,34 +127,47 @@ public class TrackerGetr {
 		catch(Exception e)
 		{
 			System.err.println("ERROR: Unable to create HTTP URL Connection with tracker. ");
-			return null;
 		}
 		
 		/** Receiving tracker response */
-		/*NOTE: Still needs to be modified. In progress. */
 		try 
 		{
-			DataInputStream fromtracker = new DataInputStream(trkConnection.getInputStream());
-			/*
-			int size = trkConnection.getContentLength();
-			trkByteResponse = new byte[size];
-			fromtracker.readFully(trkByteResponse);
-			*/
+			trackerData = new DataInputStream(trkConnection.getInputStream());
+			size = trkConnection.getContentLength();
+			trkDataByteArray = new byte[size];
+			trackerData.readFully(trkDataByteArray);
+			trackerData.close();
+
 		} catch (IOException e) {
-			System.out.println("Caught IOException: " + e.getMessage());
+			System.err.println("Caught IOException: " + e.getMessage());
 		}
 		
-		/** Decoding tracker Map response to String Array */
-		 	peerList = decodeCompressedPeers(trkResponse);
-		 	
-		/** Extract information (interval) from tracker response  */
-		//blah blah 
+		/** Decoding tracker byte Array response to Map  */
+		try
+		{
+		trkMapResponse = (Map<ByteBuffer, Object>)Bencoder2.decode(trkDataByteArray); 
+		}
+		catch(BencodingException e)
+		{
+			System.err.println("Unable to decode tracker response. ");
+		}
 		
-		// Dummy response 
-		return trkByteResponse;
+		/** Extract and set Info from tracker response */ 
+		setPeerList(trkMapResponse);
+		
 	}
 
 	
+	/** Method: set peer list */
+	public static void setPeerList(Map response){
+		//Currently working on this
+		
+		/* Variables */
+		String[] decodedTrkResponse;
+		
+		/** Decode tracker Map response to String[] */
+		decodedTrkResponse = decodeCompressedPeers(response);
+	}
 	
 	/** Method: Create and return requested URL */
 	public static URL newURL(int bytesDown, int bytesUp, int bytesRemaining, URL announceURL) {
@@ -147,7 +175,7 @@ public class TrackerGetr {
 		String newUrlString = "";
 		
 		/** Find a random port to connect */
-		listeningPort = getPortNum();
+		listeningPort = setPortNum();
 		
 		/** Create requestedURL */
 		newUrlString += trackerUrl 
@@ -176,31 +204,7 @@ public class TrackerGetr {
 	}
 	
 	
-	
-	/** Method: Returns a port to connect on */
-	public static int getPortNum() {
-		/* Variables */
-		ServerSocket serverPort;
-		int listenPort;
 
-		for (int i = 6881; i <= 6889; i++) {
-			try 
-			{
-				serverPort = new ServerSocket(i);
-				return listenPort = i;
-			} 
-			catch (IOException e) 
-			{
-				System.out.println("Unable to create Socket at port " + i);
-			}
-		}
-
-		System.out.println("Unable to create Socket. Stopping Now!");
-		return -1;
-	}
-	
-	
-	
 	/** Method: Turn bytes to HexStrings */
 	/* NOTE: NEED TO MODIFY */
 	public static String toHexString(byte[] bytes) {
@@ -245,9 +249,35 @@ public class TrackerGetr {
 		return peerURLs.toArray(new String[peerURLs.size()]);
 	}
 
+	/* ================================================================================ */
+	/* 									SET-METHODS  									*/  
+	/* ================================================================================ */
+
+	/** Method: Returns a port to connect on */
+	public static int setPortNum() {
+		/* Variables */
+		ServerSocket serverPort;
+		int listenPort;
+
+		for (int i = 6881; i <= 6889; i++) {
+			try 
+			{
+				serverPort = new ServerSocket(i);
+				return listenPort = i;
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("Unable to create Socket at port " + i);
+			}
+		}
+
+		System.out.println("Unable to create Socket. Stopping Now!");
+		return -1;
+	}
 	
-	
-	/* +++++++++++++++++++++++++++++++ GET-METHODS +++++++++++++++++++++++++++++++++++ */
+	/* ================================================================================ */
+	/* 									GET-METHODS  									*/  
+	/* ================================================================================ */
 	
 	public String[] getPeerList(){
 		return peerList;
