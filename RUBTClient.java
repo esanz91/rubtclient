@@ -1,10 +1,8 @@
 package RUBTClient;
 
-import java.net.HttpURLConnection;
 import java.io.*;
-import java.util.Map;
 import java.util.Random;
-import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * RUBTClient Class
@@ -28,26 +26,36 @@ public class RUBTClient {
 	public static String destinationName;
 	public static File destinationFile;
 
-	/** File Information */
-	public int bytesDownloaded;
-	public int bytesUploaded;
-	public int bytesRemaining;
-	public static String event;
-
 	/** Client Information */
 	public static String peerID;
 
 	/** Peer Information */
 	public static String[] peer;
+	
+	/** Download Information */
+	public int bytesDownloaded;
+	public int bytesUploaded;
+	public int bytesRemaining;
+	public static String event;
+
+	public static final int blockLength = 16384;
+	public static int numPieces = 0;
+	public static int numBlocks = 0;
+	public static int numBlkPieceRatio = 0;
+	public static int numBlkLastPiece = 0;
+	
+	
 
 
-
-	/** Client Constructor */
+	/* ================================================================================ */
+	/* 								RUBTClient Constructor								*/  
+	/* ================================================================================ */
+	
 	RUBTClient(String firstArg, String secondArg){
 		try{
 			/** Extract information as String */
 			torrentName = firstArg;
-			destinationName = firstArg;
+			destinationName = secondArg;
 
 			/** Capture torrent File */
 			torrentFile= new File(torrentName);
@@ -58,11 +66,25 @@ public class RUBTClient {
 			/** Initialize upload/download/remaining Bytes */
 			bytesDownloaded = 0;
 			bytesUploaded = 0;
-			bytesRemaining = torrent.file_length;
+			bytesRemaining = torrent.file_length % blockLength;
 			event = null;
 
+			/** Set number of pieces */
+			if (bytesRemaining == 0){
+				numPieces = torrent.file_length / torrent.piece_length;
+			}
+			else{
+				numPieces = torrent.file_length / torrent.piece_length + 1;
+			}
+			
+			/** Set number of blocks */
+			numBlocks = (int)Math.ceil(torrent.file_length / blockLength);
+			
+			/** Set blocks per piece */
+			numBlkPieceRatio = torrent.piece_length / blockLength;
+			
 			/** Create peerID */
-			peerID = generatePeerId();
+			peerID = setPeerId();
 
 			/** Initialize BitSet */
 			/** 
@@ -80,10 +102,10 @@ public class RUBTClient {
 	}
 
 
-
-
-
-	/** MAIN */
+	/* ================================================================================ */
+	/* 									MAIN	  										*/  
+	/* ================================================================================ */
+	
 	public static void main(String[] args) throws IOException, BencodingException {
 
 		/* Global Variables */
@@ -104,15 +126,18 @@ public class RUBTClient {
 		tracker = new TrackerGetr(client, torrent);
 
 		/** Connects to tracker */         
-		byte[] trackerResponse = tracker.connect(0,0,client.bytesRemaining, "started");
+		tracker.connect(0,0,client.bytesRemaining, "started");
 
 		/** Checks if connection was successful */
+		/*
 		if(trackerResponse == null){
 			System.err.println("ERROR: Did not recieve tracker response. ");
 		}
+		*/
 		
 		/** Update peerList ??? */
 
+		
 		
 		/** Get peerList */
 		peer = tracker.getPeerList();
@@ -126,10 +151,14 @@ public class RUBTClient {
 		//blah blah
 		
 	}
+	
+	
 
+	/* ================================================================================ */
+	/* 									METHODS  										*/  
+	/* ================================================================================ */
 
-
-	/** Checks number of arguments in command line */
+	/** METHOD: Checks number of arguments in command line */
 	public static boolean validateNumArgs(String[] args){
 		if ((args.length != 2)) {
 			System.err.println("ERROR: Invalid number of arguments");
@@ -140,8 +169,7 @@ public class RUBTClient {
 	}
 
 
-
-	/** Parses Torrent File */
+	/** METHOD: Parses Torrent File */
 	public static TorrentInfo torrent_parser(File torrent) {
 
 		/* Variables */
@@ -194,10 +222,12 @@ public class RUBTClient {
 		}
 	}
 
+	/* ================================================================================ */
+	/* 									SET-METHODS  									*/  
+	/* ================================================================================ */
 
-
-	/** Method: Creates a random peerID */
-	public static String generatePeerId(){
+	/** METHOD: Set random peerID */
+	public static String setPeerId(){
 
 		/** Variables */
 		String randomPeerID = "";
@@ -228,34 +258,42 @@ public class RUBTClient {
 		return randomPeerID;
 	}
 
-
-
-	/* +++++++++++++++++++++++++++++++ GET-METHODS +++++++++++++++++++++++++++++++++++ */
-
+	
+	/* ================================================================================ */
+	/* 									GET-METHODS  									*/  
+	/* ================================================================================ */
+	
+	/** Retrieves TorrentInfo */
 	public TorrentInfo getTorrentInfo(){
 		return torrent;
 	}
 
+	/** Retrieves bytes downloaded */
 	public int getBytesDownloaded(){
 		return bytesDownloaded;
 	}
 
+	/** Retrieves bytes uploaded */
 	public int getBytesUploaded(){
 		return bytesUploaded;
 	}
 
+	/** Retrieves bytes left */
 	public int getBytesRemaining(){
 		return bytesRemaining;
 	}
 
+	/** Retrieves event */
 	public String getEvent(){
 		return event;
 	}
 
+	/** Retrieves number of pieces */
 	public int getNumPieces(){
-		return torrent.piece_hashes.length;
+		return numPieces;
 	}
 
+	/** Retrieves peer ID */
 	public String getPeerId(){
 		return peerID;
 	}
