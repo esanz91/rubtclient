@@ -1,93 +1,143 @@
-package rubtclient;
+package RUBTClient;
 
 import java.net.*;
 import java.io.*;
+import java.util.*;
+
+/**
+ * TrackerGetr Class
+ * Main Functions:
+ * 1) Store Tracker Information
+ * 2) Connect Client to Tracker through socket
+ * 3) Connect Client to Tracker through HTTP Connection
+ * 4) Receive Tracker Response 
+ * 
+ */
 
 public class TrackerGetr {
 
-    /**
-     * The Constant requestSize.
-     */
-    public static final int requestSize = 16000;
-    /**
-     * The infohash.
-     */
-    public byte[] infohash;
-    /**
-     * The peerid.
-     */
-    public byte[] peerid;
-    /**
-     * The uploaded.
-     */
-    public static int uploaded;
-    /**
-     * The downloaded.
-     */
-    public static int downloaded;
-    /**
-     * The left.
-     */
-    public int left;
-    /**
-     * The port.
-     */
-    private int port;
-    /**
-     * The announce.
-     */
-    private URL announce;
-    /**
-     * The event.
-     */
-    private String event;
-    /**
-     * The request string.
-     */
-    private URL getrequestURL;
-    
-    
-    TrackerGetr(TorrentInfo torrent, final byte[] peerId, final int port) {
-		this.infohash = torrent.info_hash.array();
-		this.peerid = peerId;
-		this.left = torrent.file_length;
-		this.port = port;
-		this.event = null;
-		this.announce = torrent.announce_url;
-		this.getrequestURL = newURL(torrent.announce_url);
+	/** The Constant requestSize */
+	public static final int requestSize = 16000;
+	
+	/** Torrent Information:  
+	 * infoHash
+	 * announceURL
+	 * torrent_file_bytes
+	 * piece_length
+	 * piece_hashes */
+	private static TorrentInfo torrentData;
+	//public byte[] infoHash;
+	//private URL announceURL;
+	
+	/** Client Information: 
+	 * destinationFile,
+	 * bytesDownloaded, 
+	 * bytesUploaded, 
+	 * bytesRemaining, 
+	 * event; */
+	private RUBTClient client;
+	//public byte[] peerID;
+	//public static int bytesDownloaded;
+	//public static int bytesUploaded;
+	//public static int bytesRemaining;
+	//private String event;
+	
+	/** Tracker Information */
+	private URL trackerUrl;
+	private static String trackerIP;
+	private static int trackerPort;
+	
+	/** Connection Information */
+	private URL requestedURL;
+	private static ArrayList<Peer> peerList ; 
+	static int listeningPort = -1;
+	
+	
+	/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+	/** Tracker Constructor */
+	TrackerGetr(RUBTClient c, TorrentInfo t) {		
+		
+		/** Fill in Client Information */
+		this.client = c; 								/* RUBTClient */
+		
+		/** Fill in Client Information */
+		torrentData = t; 								/* TorrentInfo */
+		
+		/** Fill in Tracker Information */
+		this.trackerUrl = torrentData.announce_url; 	/* URL */
+		trackerIP = trackerUrl.getHost(); 				/* String */
+		trackerPort = trackerUrl.getPort(); 			/* int */
+	}
+	
+	public static byte[] connect(TorrentInfo torrent) throws IOException {
+
+		/** Variables */
+		Socket trkSocket = null;
+		URL trkURL = null;
+		
+		/** Open socket in order to communicate with tracker */
+		try
+		{
+			trkSocket = new Socket(trackerIP, trackerPort);
+		}
+		catch(Exception e){
+			System.err.println("ERROR: Unable to create socket at " + trackerIP + ":" + trackerPort);
+			return null;
+		}
+		
+		/** Initiate tracker URL connection */
+		try{
+			trkURL = newURL(trackerUrl);
+			//HELP!!! I'm having trouble is static. Should we make the method void?
+		}
+		catch(Exception e){
+			/* ??? */
+		}
+		
+		/** Commence connection with tracker */
+		try {
+			HttpURLConnection tracker = (HttpURLConnection) torrent.announce_url.openConnection();
+			DataInputStream fromtracker = new DataInputStream(tracker.getInputStream());
+			byte[] response;
+			int size = tracker.getContentLength();
+			response = new byte[size];
+			fromtracker.readFully(response);
+			return response;
+		} catch (IOException e) {
+			System.out.println("Caught IOException: " + e.getMessage());
+		}
+		return null;
 	}
 
-    public static byte[] Httpconnect(TorrentInfo torrent) throws IOException {
-
-        try {
-            HttpURLConnection tracker = (HttpURLConnection) torrent.announce_url.openConnection();
-            DataInputStream fromtracker = new DataInputStream(tracker.getInputStream());
-            byte[] response;
-            int size = tracker.getContentLength();
-            response = new byte[size];
-            fromtracker.readFully(response);
-            return response;
-        } catch (IOException e) {
-            System.out.println("Caught IOException: " + e.getMessage());
-        }
-        return null;
-    }
-
-    public URL newURL(URL announceURL) {
-        String newURL = announceURL.toString();
-        newURL += "?info_hash=" + Helper_Methods.toHexString(this.infohash)
-                + "&peer_id=" + Helper_Methods.toHexString(this.peerid) + "&port="
-                + this.port + "&uploaded=" + this.uploaded + "&downloaded="
-                + this.downloaded + "&left=" + this.left;
-        if (this.event != null) {
-            newURL += "&event=" + this.event;
-        }
-
-        try {
-            return new URL(newURL);
-        } catch (MalformedURLException e) {
-            System.out.println("Unable to create URL");
-            return null;
-        }
-    }
+	/** Method: Create and return requested URL */
+	public URL newURL(URL announceURL) {
+		/* Variables */
+		String newURL;
+		
+		/** Find a random port to connect */
+		this.listeningPort = GeneratingFunctions.getPort();
+		
+		/** Create requestedURL */
+		newURL = announceURL.toString();
+		newURL += "?info_hash=" + GeneratingFunctions.toHexString(this.torrentData.info_hash.array())
+		+ "&peer_id=" + GeneratingFunctions.toHexString(this.client.peerID.getBytes()) + "&port="
+		+ this.listeningPort + "&uploaded=" + this.client.bytesUploaded + "&downloaded="
+		+ this.client.bytesDownloaded + "&left=" + this.client.bytesRemaining;
+		
+		if (this.client.event != null) {
+			newURL += "&event=" + this.client.event;
+		}
+		
+		/** Return requested URL */
+		try 
+		{
+			this.requestedURL = new URL(newURL);
+			return this.requestedURL;
+		} 
+		catch (MalformedURLException e) 
+		{
+			System.out.println("Unable to create URL");
+			return null;
+		}
+	}
 }
