@@ -1,10 +1,14 @@
 package RUBTClient;
 
+import java.io.*;
+import java.util.*;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.net.*;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.io.*;
-import java.util.*;
+
 
 /**
  * TrackerGetr Class
@@ -30,8 +34,6 @@ public class TrackerGetr {
 	 * piece_length
 	 * piece_hashes */
 	private static TorrentInfo torrentData;
-	//public byte[] infoHash;
-	//private URL announceURL;
 	
 	/** Client Information: 
 	 * destinationFile,
@@ -40,11 +42,6 @@ public class TrackerGetr {
 	 * bytesRemaining, 
 	 * event; */
 	private static RUBTClient client;
-	//public byte[] peerID;
-	//public static int bytesDownloaded;
-	//public static int bytesUploaded;
-	//public static int bytesRemaining;
-	//private String event;
 	
 	/** Tracker Information */
 	private static URL trackerUrl;
@@ -54,7 +51,7 @@ public class TrackerGetr {
 	
 	/** Connection Information */
 	private static URL requestedURL;
-	private static String[] peerList ; 
+	private static ArrayList<Peer> peerList ; 
 	static int listeningPort = -1;
 	
 	/** keyINTERVAL */
@@ -159,14 +156,22 @@ public class TrackerGetr {
 
 	
 	/** Method: set peer list */
-	public static void setPeerList(Map response){
-		//Currently working on this
-		
+	public static void setPeerList(Map<ByteBuffer, Object> trackerResponse){
+
 		/* Variables */
 		String[] decodedTrkResponse;
 		
+		/** Extract interval */
+		trackerInterval = (Integer)trackerResponse.get(keyINTERVAL);
+		System.out.println(trackerInterval);
+		
 		/** Decode tracker Map response to String[] */
-		decodedTrkResponse = decodeCompressedPeers(response);
+		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
+		
+		/** Extract peer */
+		for(int i = 0; i < decodedTrkResponse.length; i++){
+			System.out.println(decodedTrkResponse[i]);
+		}
 	}
 	
 	/** Method: Create and return requested URL */
@@ -230,7 +235,7 @@ public class TrackerGetr {
 	
 	
 	/** Method: Decode Map to String[] */
-	public static String[] decodeCompressedPeers(Map map){
+	public static String[] decodeCompressedPeers(Map<ByteBuffer, Object> map){
 		ByteBuffer peers = (ByteBuffer) map.get(ByteBuffer.wrap("peers".getBytes()));
 		ArrayList<String> peerURLs = new ArrayList<String>();
 		try {
@@ -279,7 +284,24 @@ public class TrackerGetr {
 	/* 									GET-METHODS  									*/  
 	/* ================================================================================ */
 	
-	public String[] getPeerList(){
+	public ArrayList<Peer> getPeerList(){
 		return peerList;
 	}
+	
+	public URL getTrackerUrl(){
+		return trackerUrl;
+	}
+	
+	public String getTrackerIP(){
+		return trackerIP;
+	}
+	
+	public int getTrackerPort(){
+		return trackerPort;
+	}
+	
+	public int getTrackerInterval(){
+		return trackerInterval;
+	}
+
 }
