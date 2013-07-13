@@ -3,6 +3,8 @@ package RUBTClient;
 import java.net.HttpURLConnection;
 import java.io.*;
 import java.util.Map;
+import java.util.Random;
+import java.util.ArrayList;
 
 /**
  * RUBTClient Class
@@ -16,29 +18,30 @@ import java.util.Map;
 public class RUBTClient {
 
 	/* Public variables */
-	
+
 	/** Torrent File Information */
 	public static String torrentName;
 	public static File torrentFile;
 	public static TorrentInfo torrent;
-	
+
 	/** Destination File Information */
 	public static String destinationName;
 	public static File destinationFile;
-	
+
 	/** File Information */
 	public int bytesDownloaded;
 	public int bytesUploaded;
 	public int bytesRemaining;
 	public static String event;
-	
+
 	/** Client Information */
 	public static String peerID;
 
-	
-	
-	
-	
+	/** Peer Information */
+	public static String[] peer;
+
+
+
 	/** Client Constructor */
 	RUBTClient(String firstArg, String secondArg){
 		try{
@@ -48,7 +51,7 @@ public class RUBTClient {
 
 			/** Capture torrent File */
 			torrentFile= new File(torrentName);
-			
+
 			/** Parse torrent and return TorrentInfo */
 			torrent = torrent_parser(torrentFile);	
 
@@ -59,8 +62,8 @@ public class RUBTClient {
 			event = null;
 
 			/** Create peerID */
-			peerID = GeneratingFunctions.generatePeerId();
-			
+			peerID = generatePeerId();
+
 			/** Initialize BitSet */
 			/** 
 			 * 
@@ -75,38 +78,57 @@ public class RUBTClient {
 			System.exit(1);
 		}
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	/** MAIN */
 	public static void main(String[] args) throws IOException, BencodingException {
-		
+
 		/* Global Variables */
 		RUBTClient client;
-		TrackerGetr Tracker;
-		
+		TrackerGetr tracker;
+		String localPeer ="";
+
 		/** Check if valid number of arguments in the command line */ 
 		if (!validateNumArgs(args)) {
 			System.out.println("USAGE: RUBTClient [torrent-file-to-read] [file-name-to-save]");
 			System.exit(1);
 		}
-		
+
 		/** Initialize Client */
 		client = new RUBTClient(args[0], args[1]);
-		
+
 		/** Initialize Tracker */
-		Tracker = new TrackerGetr(client, torrent);
+		tracker = new TrackerGetr(client, torrent);
+
+		/** Connects to tracker */         
+		byte[] trackerResponse = tracker.connect(0,0,client.bytesRemaining, "started");
+
+		/** Checks if connection was successful */
+		if(trackerResponse == null){
+			System.err.println("ERROR: Did not recieve tracker response. ");
+		}
 		
-		/** connects to tracker and gets response and then decodes that
-		 * response into an array of peers of the form <IP address>:<port>
-		 */         
-		byte[] tracker_response=Tracker.connect(torrent);
-		Map compressedpeers=(Map)Bencoder2.decode(tracker_response);
-		String[] peerslist= GeneratingFunctions.decodeCompressedPeers(compressedpeers);
+		/** Update peerList ??? */
+
+		
+		/** Get peerList */
+		peer = tracker.getPeerList();
+		
+		/** Extract specific peer with ID: 128.6.171.3 */
+		// for(i = 0 ...
+		// if(peer[i] has same ID as 128.6.171.3 then,  
+		// localPeer = peer[i]
+		
+		/** Start ProgramManager ("downloader" application thread) */
+		//blah blah
+		
 	}
-	
+
+
+
 	/** Checks number of arguments in command line */
 	public static boolean validateNumArgs(String[] args){
 		if ((args.length != 2)) {
@@ -116,7 +138,9 @@ public class RUBTClient {
 		else
 			return true;
 	}
-	
+
+
+
 	/** Parses Torrent File */
 	public static TorrentInfo torrent_parser(File torrent) {
 
@@ -169,14 +193,71 @@ public class RUBTClient {
 			return null;
 		}
 	}
-	
-	/* +++++++++++++++++++++++++++++++ GET METHODS +++++++++++++++++++++++++++++++++++ */
+
+
+
+	/** Method: Creates a random peerID */
+	public static String generatePeerId(){
+
+		/** Variables */
+		String randomPeerID = "";
+		Random randomSequence; 
+
+		/** Bank of appropriate peer ID characters */
+		char[] appropriateChars = 
+		{'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+				'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+				'0','1','2','3','4','5','6','7','8','9'};
+
+		/** Initiate random sequence */
+		randomSequence = new Random();
+
+		/** First letter cannot be R */
+		randomPeerID += appropriateChars[randomSequence.nextInt(61)];
+		while (randomPeerID.equalsIgnoreCase("r")){
+			randomPeerID = "";
+			randomPeerID += appropriateChars[randomSequence.nextInt(61)];
+		}
+
+		/** Complete random sequence */
+		for(int i = 1; i < 20; i++)
+		{
+			randomPeerID += appropriateChars[randomSequence.nextInt(61)];
+		}
+
+		return randomPeerID;
+	}
+
+
+
+	/* +++++++++++++++++++++++++++++++ GET-METHODS +++++++++++++++++++++++++++++++++++ */
+
+	public TorrentInfo getTorrentInfo(){
+		return torrent;
+	}
+
+	public int getBytesDownloaded(){
+		return bytesDownloaded;
+	}
+
+	public int getBytesUploaded(){
+		return bytesUploaded;
+	}
+
+	public int getBytesRemaining(){
+		return bytesRemaining;
+	}
+
+	public String getEvent(){
+		return event;
+	}
+
 	public int getNumPieces(){
 		return torrent.piece_hashes.length;
 	}
-	
+
 	public String getPeerId(){
 		return peerID;
 	}
-		
+
 }
