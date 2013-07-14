@@ -161,6 +161,18 @@ public class TrackerGetr {
 
 		/** Extract and set Info from tracker response */ 
 		setPeerList(trkMapResponse);
+		
+		/** Close Socket */
+		if (trkSocket != null){
+			try
+			{
+				trkSocket.close();
+			}
+			catch(Exception e)
+			{
+				System.err.println("Could not terminate connection with socket.");
+			}
+		}
 
 	}
 
@@ -185,10 +197,14 @@ public class TrackerGetr {
 		/* Print Statements */
 		/* ================ */	
 		System.out.println("NumPeers: " + decodedTrkResponse.length);
+		
 		for(int i= 0; i < decodedTrkResponse.length; i++){
 			String[] peerString = decodedTrkResponse[i].split(delims);
+		
 			if(peerString[0].equals("128.6.171.3")){
-				try{
+			
+				try
+				{
 					String newIP = peerString[0];
 					System.out.println("PeerIP: " + newIP);
 					
@@ -197,9 +213,11 @@ public class TrackerGetr {
 					
 					Peer newPeer = new Peer(newIP, newPort);
 					peerList.add(newPeer);
+					System.out.println("Peer has been added to List. ");
 					break;
 				}
-				catch(Exception e){
+				catch(Exception e)
+				{
 					System.err.println("ERROR: Could not create peer. ");
 				}
 			}	
