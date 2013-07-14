@@ -46,8 +46,8 @@ public class Peer {
     final static byte[] keep_alive = {0, 0, 0, 0};
 
     
-    public Peer(String peerIdNum, String IpNum, int peerPortNum) {
-        peerID = peerIdNum;
+    public Peer(String IpNum, int peerPortNum) {
+        peerID = ""; //not provided to us?
         hostIP = IpNum;
         peerPort = peerPortNum;
         booleanBitField = new boolean [RUBTClient.numPieces];
