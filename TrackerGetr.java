@@ -55,13 +55,24 @@ public class TrackerGetr {
 	static int listeningPort = -1;
 
 	/** keyINTERVAL */
-	public static final ByteBuffer keyINTERVAL = ByteBuffer.wrap(new byte[] {
-			'i', 'n', 't', 'e', 'r', 'v', 'a', 'l' });
+	public static final ByteBuffer keyINTERVAL = 
+		ByteBuffer.wrap(new byte[] { 'i', 'n', 't', 'e', 'r', 'v', 'a', 'l' });
 
 	/** keyPEERS */
-	public static final ByteBuffer keyPEERS = ByteBuffer.wrap(new byte[] { 'p',
-			'e', 'e', 'r', 's' });
+	public static final ByteBuffer keyPEERS = 
+		ByteBuffer.wrap(new byte[] { 'p', 'e', 'e', 'r', 's' });
 
+	/** keyPEER_IP */
+	public static final ByteBuffer keyPEER_IP = 
+		ByteBuffer.wrap(new byte[] { 'i', 'p' });
+
+	/** keyPEER_ID */
+	public static final ByteBuffer keyPEER_ID = 
+		ByteBuffer.wrap(new byte[] { 'p', 'e', 'e', 'r', ' ', 'i', 'd' });
+
+	/** keyPEER_PORT */
+	public static final ByteBuffer keyPEER_PORT = 
+		ByteBuffer.wrap(new byte[] { 'p','o', 'r', 't' });
 
 	/* ================================================================================ */
 	/* 								Tracker Constructor									*/  
@@ -160,6 +171,8 @@ public class TrackerGetr {
 
 		/* Variables */
 		String[] decodedTrkResponse;
+		ArrayList<Object> pArray;
+		ArrayList<Peer> pList;
 
 		/** Extract interval */
 		trackerInterval = (Integer)trackerResponse.get(keyINTERVAL);
@@ -168,167 +181,192 @@ public class TrackerGetr {
 		/** Decode tracker Map response to String[] */
 		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
 
-		/** Extract peer */
-		/* where I am leaving off 
-		ArrayList<Object> pArray = (ArrayList<Object>) trackerResponse.get(keyPEERS);
-		for (int p = 0; p < pArray.size(); p++){
-			Object peer = pArray.get(p);
-			String ipNum = "";
-			String peerIdNum = "";
-			int peerPortNum = 0;
+		/** Extract peer */ 
+		pArray = (ArrayList<Object>) trackerResponse.get(keyPEERS);
 
-			Map<ByteBuffer, Object> peerMap = (Map<ByteBuffer, Object>) peer;
-			ipNum = bufferToString;
+		try
+		{
+			for (int p = 0; p < pArray.size(); p++){
+				Object peer = pArray.get(p);
+				String ipNum = "";
+				String peerIdNum = "";
+				int peerPortNum = 0;
 
-			/* NOTE: Since we are dealing with one peer we can just for loop to get that one peer right? 
+				Map<ByteBuffer, Object> pMap = (Map<ByteBuffer, Object>) peer;
+				peerIdNum = bufferToString((ByteBuffer) pMap.get(keyPEER_ID));
+				ipNum = bufferToString((ByteBuffer) pMap.get(keyPEER_IP));
+				peerPortNum = (Integer) pMap.get(keyPEER_PORT);
 
+				/* ================ */
+				/* Print Statements */
+				/* ================ */	
+				System.out.println(keyPEER_IP + " " + keyPEER_ID + " " + keyPEER_PORT);
+
+				/*
+				Peer newPeer = new Peer(peerIdNum, ipNum, peerPortNum);
+
+				if(newPeer.isValid()){
+					peerList.add(newPeer);
+					}
+				 */
+
+			}
 		}
+		catch(Exception e)
+		{
+			System.err.println("Error: Could not load peers into PeerList. ");
+		}
+
+		//peerList = pList;
+	
 
 		/* ================ */
-			/* Print Statements */
-			/* ================ */	
-			System.out.println("Extracting PeerList from String Array");
-			for(int i = 0; i < decodedTrkResponse.length; i++){
-				System.out.println(decodedTrkResponse[i]);
-			}
+		/* Print Statements */
+		/* ================ */	
+		/*
+		System.out.println("Extracting PeerList from String Array");
+		for(int i = 0; i < decodedTrkResponse.length; i++){
+			System.out.println(decodedTrkResponse[i]);
+		}
+		*/
+	}
+
+	/* copy past copy paste */
+	public static String bufferToString(ByteBuffer buffer) {
+		byte[] bufferBytes = new byte[buffer.capacity()];
+		buffer.get(bufferBytes, 0, bufferBytes.length);
+		String value = new String(bufferBytes);
+		return value;
+	}
+
+	/** Method: Create and return requested URL */
+	public static URL newURL(int bytesDown, int bytesUp, int bytesRemaining, URL announceURL) {
+		/* Variables */
+		String newUrlString = "";
+
+		/** Find a random port to connect */
+		listeningPort = setPortNum();
+
+		/** Create requestedURL */
+		newUrlString += trackerUrl 
+		+ "?info_hash=" + toHexString(torrentData.info_hash.array())
+		+ "&peer_id=" + toHexString((client.getPeerId()).getBytes()) 
+		+ "&port=" + listeningPort 
+		+ "&uploaded=" + bytesUp 
+		+ "&downloaded=" + bytesDown 
+		+ "&left=" + bytesRemaining;
+
+		if ((client.getEvent()) != null) {
+			newUrlString += "&event=" + (client.getEvent());
 		}
 
-		/* copy past copy paste */
-		public static String bufferToString(ByteBuffer buffer) {
-			byte[] bufferBytes = new byte[buffer.capacity()];
-			buffer.get(bufferBytes, 0, bufferBytes.length);
-			String value = new String(bufferBytes);
-			return value;
+		/** Return requested URL */
+		try 
+		{
+			requestedURL = new URL(newUrlString);
+			return requestedURL;
+		} 
+		catch (MalformedURLException e) 
+		{
+			System.out.println("Unable to create URL");
+			return null;
+		}
+	}
+
+
+
+	/** Method: Turn bytes to HexStrings */
+	/* NOTE: NEED TO MODIFY */
+	public static String toHexString(byte[] bytes) {
+		if (bytes == null) {
+			return null;
 		}
 
-		/** Method: Create and return requested URL */
-		public static URL newURL(int bytesDown, int bytesUp, int bytesRemaining, URL announceURL) {
-			/* Variables */
-			String newUrlString = "";
+		if (bytes.length == 0) {
+			return "";
+		}
 
-			/** Find a random port to connect */
-			listeningPort = setPortNum();
+		StringBuilder hex = new StringBuilder(bytes.length * 3);
 
-			/** Create requestedURL */
-			newUrlString += trackerUrl 
-			+ "?info_hash=" + toHexString(torrentData.info_hash.array())
-			+ "&peer_id=" + toHexString((client.getPeerId()).getBytes()) 
-			+ "&port=" + listeningPort 
-			+ "&uploaded=" + bytesUp 
-			+ "&downloaded=" + bytesDown 
-			+ "&left=" + bytesRemaining;
+		for (byte b : bytes) {
+			byte hi = (byte) ((b >> 4) & 0x0f);
+			byte lo = (byte) (b & 0x0f);
 
-			if ((client.getEvent()) != null) {
-				newUrlString += "&event=" + (client.getEvent());
+			hex.append('%').append(HEX_CHARS[hi]).append(HEX_CHARS[lo]);
+		}
+		return hex.toString();
+	}
+
+
+
+	/** Method: Decode Map to String[] */
+	public static String[] decodeCompressedPeers(Map<ByteBuffer, Object> map){
+		ByteBuffer peers = (ByteBuffer) map.get(ByteBuffer.wrap("peers".getBytes()));
+		ArrayList<String> peerURLs = new ArrayList<String>();
+		try {
+			while (true) {
+				String ip = String.format("%d.%d.%d.%d",
+						peers.get() & 0xff,
+						peers.get() & 0xff,
+						peers.get() & 0xff,
+						peers.get() & 0xff);
+				int port = peers.get() * 256 + peers.get();
+				peerURLs.add(ip + ":" + port);
 			}
+		} catch (BufferUnderflowException e) {
+			// done
+		}
+		return peerURLs.toArray(new String[peerURLs.size()]);
+	}
 
-			/** Return requested URL */
+	/* ================================================================================ */
+	/* 									SET-METHODS  									*/  
+	/* ================================================================================ */
+
+	/** Method: Returns a port to connect on */
+	public static int setPortNum() {
+		/* Variables */
+		ServerSocket serverPort;
+		int listenPort;
+
+		for (int i = 6881; i <= 6889; i++) {
 			try 
 			{
-				requestedURL = new URL(newUrlString);
-				return requestedURL;
+				serverPort = new ServerSocket(i);
+				return listenPort = i;
 			} 
-			catch (MalformedURLException e) 
+			catch (IOException e) 
 			{
-				System.out.println("Unable to create URL");
-				return null;
+				System.out.println("Unable to create Socket at port " + i);
 			}
 		}
 
-
-
-		/** Method: Turn bytes to HexStrings */
-		/* NOTE: NEED TO MODIFY */
-		public static String toHexString(byte[] bytes) {
-			if (bytes == null) {
-				return null;
-			}
-
-			if (bytes.length == 0) {
-				return "";
-			}
-
-			StringBuilder hex = new StringBuilder(bytes.length * 3);
-
-			for (byte b : bytes) {
-				byte hi = (byte) ((b >> 4) & 0x0f);
-				byte lo = (byte) (b & 0x0f);
-
-				hex.append('%').append(HEX_CHARS[hi]).append(HEX_CHARS[lo]);
-			}
-			return hex.toString();
-		}
-
-
-
-		/** Method: Decode Map to String[] */
-		public static String[] decodeCompressedPeers(Map<ByteBuffer, Object> map){
-			ByteBuffer peers = (ByteBuffer) map.get(ByteBuffer.wrap("peers".getBytes()));
-			ArrayList<String> peerURLs = new ArrayList<String>();
-			try {
-				while (true) {
-					String ip = String.format("%d.%d.%d.%d",
-							peers.get() & 0xff,
-							peers.get() & 0xff,
-							peers.get() & 0xff,
-							peers.get() & 0xff);
-					int port = peers.get() * 256 + peers.get();
-					peerURLs.add(ip + ":" + port);
-				}
-			} catch (BufferUnderflowException e) {
-				// done
-			}
-			return peerURLs.toArray(new String[peerURLs.size()]);
-		}
-
-		/* ================================================================================ */
-		/* 									SET-METHODS  									*/  
-		/* ================================================================================ */
-
-		/** Method: Returns a port to connect on */
-		public static int setPortNum() {
-			/* Variables */
-			ServerSocket serverPort;
-			int listenPort;
-
-			for (int i = 6881; i <= 6889; i++) {
-				try 
-				{
-					serverPort = new ServerSocket(i);
-					return listenPort = i;
-				} 
-				catch (IOException e) 
-				{
-					System.out.println("Unable to create Socket at port " + i);
-				}
-			}
-
-			System.out.println("Unable to create Socket. Stopping Now!");
-			return -1;
-		}
-
-		/* ================================================================================ */
-		/* 									GET-METHODS  									*/  
-		/* ================================================================================ */
-
-		public ArrayList<Peer> getPeerList(){
-			return peerList;
-		}
-
-		public URL getTrackerUrl(){
-			return trackerUrl;
-		}
-
-		public String getTrackerIP(){
-			return trackerIP;
-		}
-
-		public int getTrackerPort(){
-			return trackerPort;
-		}
-
-		public int getTrackerInterval(){
-			return trackerInterval;
-		}
-
+		System.out.println("Unable to create Socket. Stopping Now!");
+		return -1;
 	}
+
+	/* ================================================================================ */
+	/* 									GET-METHODS  									*/  
+	/* ================================================================================ */
+
+	public ArrayList<Peer> getPeerList(){
+		return peerList;
+	}
+
+	public URL getTrackerUrl(){
+		return trackerUrl;
+	}
+
+	public String getTrackerIP(){
+		return trackerIP;
+	}
+
+	public int getTrackerPort(){
+		return trackerPort;
+	}
+
+	public int getTrackerInterval(){
+		return trackerInterval;
+	}
+
+}
