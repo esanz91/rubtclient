@@ -12,6 +12,10 @@ import java.nio.*;
  * 2) Connect Client to Tracker through socket
  * 3) Connect Client to Tracker through HTTP Connection
  * 4) Receive Tracker Response 
+ * 5) Decode Tracker Response
+ * 6) Extract Interval
+ * 7) Extract Peers
+ * 8) Create an ArrayList of Peers (in this case we are only connecting to one)
  * 
  */
 
@@ -46,7 +50,7 @@ public class TrackerGetr {
 
 	/** Connection Information */
 	private static URL requestedURL;
-	private static ArrayList<Peer> peerList ; 
+	private static ArrayList<Peer> peerList = new ArrayList<Peer>() ; 
 	static int listeningPort = -1;
 
 	/** keyINTERVAL */
@@ -166,6 +170,7 @@ public class TrackerGetr {
 
 		/* Variables */
 		String[] decodedTrkResponse;
+		String delims = "[:]";
 
 		
 		/** Extract interval */
@@ -175,21 +180,30 @@ public class TrackerGetr {
 		/** Decode tracker Map response to String[] */
 		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
 		
-		/** Extract peer */ 
+		/** Extract SPECIFIC peer */ 
 		/* ================ */
 		/* Print Statements */
 		/* ================ */	
+		System.out.println("NumPeers: " + decodedTrkResponse.length);
 		for(int i= 0; i < decodedTrkResponse.length; i++){
-			System.out.println(decodedTrkResponse[i]);
+			String[] peerString = decodedTrkResponse[i].split(delims);
+			if(peerString[0].equals("128.6.171.3")){
+				try{
+					String newIP = peerString[0];
+					System.out.println("PeerIP: " + newIP);
+					
+					int newPort = Integer.parseInt(peerString[1]);
+					System.out.println("PeerPort: " + newPort);
+					
+					Peer newPeer = new Peer(newIP, newPort);
+					peerList.add(newPeer);
+					break;
+				}
+				catch(Exception e){
+					System.err.println("ERROR: Could not create peer. ");
+				}
+			}	
 		}
-	
-		/*
-			Peer newPeer = new Peer(peerIdNum, ipNum, peerPortNum);
-
-			if(newPeer.isValid()){
-				peerList.add(newPeer);
-			}
-		 */
 	}
 
 
