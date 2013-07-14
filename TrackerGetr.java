@@ -103,7 +103,7 @@ public class TrackerGetr {
 		int size;
 
 		byte[] trkDataByteArray = null;
-		Map<ByteBuffer, Object> trkMapResponse = null;
+		Map trkMapResponse = null;
 
 		/** Verify Tracker was initialized */
 		if (trackerUrl == null)
@@ -148,7 +148,7 @@ public class TrackerGetr {
 		/** Decoding tracker byte Array response to Map  */
 		try
 		{
-			trkMapResponse = (Map<ByteBuffer, Object>)Bencoder2.decode(trkDataByteArray); 
+			trkMapResponse = (Map)Bencoder2.decode(trkDataByteArray); 
 		}
 		catch(BencodingException e)
 		{
@@ -162,7 +162,7 @@ public class TrackerGetr {
 
 
 	/** Method: set peer list */
-	public static void setPeerList(Map<ByteBuffer, Object> trackerResponse){
+	public static void setPeerList(Map trackerResponse){
 
 		/* Variables */
 		String[] decodedTrkResponse;
@@ -175,17 +175,17 @@ public class TrackerGetr {
 		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
 
 		/** Extract peer */ 
-		List<Map<ByteBuffer, Object>> list = (List<Map<ByteBuffer, Object>>)trackerResponse.get(keyPEERS);
-
+		Map list = (Map)trackerResponse.get(keyPEERS);
+		
 		try
 		{
 			for (int p = 0; p < list.size(); p++){
 				String ipNum = "";
 				String peerIdNum = "";
 				int peerPortNum = 0;
-				Map<ByteBuffer, Object> pMap; 
+				Map pMap; 
 				
-				pMap = (Map<ByteBuffer, Object>) list.get(p);
+				pMap = (Map) list.get(p);
 				peerIdNum = new String(((ByteBuffer)pMap.get(keyPEER_ID)).array(), "ASCII");
 				ipNum = new String(((ByteBuffer)pMap.get(keyPEER_IP)).array());
 				peerPortNum = ((Integer)pMap.get(keyPEER_PORT)).intValue();
