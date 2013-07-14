@@ -103,7 +103,7 @@ public class TrackerGetr {
 		int size;
 
 		byte[] trkDataByteArray = null;
-		Object trkMapResponse = null;
+		Map<ByteBuffer, Object> trkMapResponse = null;
 
 		/** Verify Tracker was initialized */
 		if (trackerUrl == null)
@@ -148,7 +148,7 @@ public class TrackerGetr {
 		/** Decoding tracker byte Array response to Map  */
 		try
 		{
-			trkMapResponse = Bencoder2.decode(trkDataByteArray); 
+			trkMapResponse = (Map<ByteBuffer, Object>)Bencoder2.decode(trkDataByteArray); 
 		}
 		catch(BencodingException e)
 		{
@@ -162,76 +162,34 @@ public class TrackerGetr {
 
 
 	/** Method: set peer list */
-	public static void setPeerList(Object trackerResponse){
+	public static void setPeerList(Map<ByteBuffer, Object> trackerResponse){
 
 		/* Variables */
-		//String[] decodedTrkResponse;
-		Map<ByteBuffer, Object> trackerMap = (Map<ByteBuffer, Object>) trackerResponse;
+		String[] decodedTrkResponse;
+
 		
 		/** Extract interval */
-		trackerInterval = (Integer)trackerMap.get(keyINTERVAL);
+		trackerInterval = (Integer)trackerResponse.get(keyINTERVAL);
 		System.out.println("trackerInterval: " + trackerInterval);
 
 		/** Decode tracker Map response to String[] */
-		//decodedTrkResponse = decodeCompressedPeers(trackerResponse);
-
-		/** Extract peer */ 
-		@SuppressWarnings("unchecked")
-		ArrayList<Object> entryList = (ArrayList<Object>)trackerMap.get(keyPEERS);
+		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
 		
-		try
-		{
-			/*
-			Iterator it = trackerResponse.entrySet().iterator();
-			while(it.hasNext()){
-				Map.Entry pairs = (Map.Entry) it.next();
-				System.out.println(pairs.getKey() + "=" + pairs.getValue());
-			*/
-			
-			for (int p = 0; p < entryList.size(); p++){
-				Object peer = entryList.get(p);
-				String ipNum = "";
-				String peerIdNum = "";
-				int peerPortNum = 0; 
-				
-				Map<ByteBuffer, Object> pMap = (Map<ByteBuffer, Object>) peer;
-				
-				peerIdNum = new String(((ByteBuffer)pMap.get(keyPEER_ID)).array(), "ASCII");
-				ipNum = new String(((ByteBuffer)pMap.get(keyPEER_IP)).array());
-				peerPortNum = ((Integer)pMap.get(keyPEER_PORT)).intValue();
-
-				/* ================ */
-				/* Print Statements */
-				/* ================ */	
-				System.out.println(keyPEER_IP + " " + keyPEER_ID + " " + keyPEER_PORT);
-
-				/*
-				Peer newPeer = new Peer(peerIdNum, ipNum, peerPortNum);
-
-				if(newPeer.isValid()){
-					peerList.add(newPeer);
-					}
-				 */
-
-			}
-		}
-		catch(Exception e)
-		{
-			System.err.println("Error: Could not load peers into PeerList. ");
-		}
-
-		//peerList = pList;
-	
-
+		/** Extract peer */ 
 		/* ================ */
 		/* Print Statements */
 		/* ================ */	
-		/*
-		System.out.println("Extracting PeerList from String Array");
-		for(int i = 0; i < decodedTrkResponse.length; i++){
+		for(int i= 0; i < decodedTrkResponse.length; i++){
 			System.out.println(decodedTrkResponse[i]);
 		}
-		*/
+	
+		/*
+			Peer newPeer = new Peer(peerIdNum, ipNum, peerPortNum);
+
+			if(newPeer.isValid()){
+				peerList.add(newPeer);
+			}
+		 */
 	}
 
 
