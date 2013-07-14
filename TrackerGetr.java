@@ -2,13 +2,8 @@ package RUBTClient;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.net.*;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-
+import java.nio.*;
 
 /**
  * TrackerGetr Class
@@ -171,8 +166,6 @@ public class TrackerGetr {
 
 		/* Variables */
 		String[] decodedTrkResponse;
-		ArrayList pArray;
-		ArrayList<Peer> pList;
 
 		/** Extract interval */
 		trackerInterval = (Integer)trackerResponse.get(keyINTERVAL);
@@ -182,18 +175,18 @@ public class TrackerGetr {
 		decodedTrkResponse = decodeCompressedPeers(trackerResponse);
 
 		/** Extract peer */ 
-		pArray = (ArrayList) trackerResponse.get(keyPEERS);
+		List<Map<ByteBuffer, Object>> list = (List<Map<ByteBuffer, Object>>)trackerResponse.get(keyPEERS);
 
 		try
 		{
-			for (int p = 0; p < pArray.size(); p++){
+			for (int p = 0; p < list.size(); p++){
 				String ipNum = "";
 				String peerIdNum = "";
 				int peerPortNum = 0;
 				Map<ByteBuffer, Object> pMap; 
 				
-				pMap = (Map<ByteBuffer, Object>) pArray.get(p);
-				peerIdNum = new String(((ByteBuffer)pMap.get(keyPEER_ID)).array());
+				pMap = (Map<ByteBuffer, Object>) list.get(p);
+				peerIdNum = new String(((ByteBuffer)pMap.get(keyPEER_ID)).array(), "ASCII");
 				ipNum = new String(((ByteBuffer)pMap.get(keyPEER_IP)).array());
 				peerPortNum = ((Integer)pMap.get(keyPEER_PORT)).intValue();
 
