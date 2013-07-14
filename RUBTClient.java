@@ -148,7 +148,6 @@ public class RUBTClient {
 		System.out.println("trackerUrl: " + tracker.getTrackerUrl());
 		System.out.println("trackerIP: " + tracker.getTrackerIP());
 		System.out.println("trackerPort: " + tracker.getTrackerPort());
-		System.out.println("trackerInterval: " + tracker.getTrackerInterval());
 		
 		
 		/* ================ */
@@ -159,20 +158,6 @@ public class RUBTClient {
 		/** Connects to tracker */         
 		tracker.connect(0,0,client.bytesRemaining, "started");
 		
-		
-		
-		
-		/** Checks if connection was successful */
-		/*
-		if(trackerResponse == null){
-			System.err.println("ERROR: Did not recieve tracker response. ");
-		}
-		*/
-		
-		/** Update peerList ??? */
-
-		
-		
 		/** Get peerList */
 		peer = tracker.getPeerList();
 		
@@ -181,7 +166,7 @@ public class RUBTClient {
 		// if(peer[i] has same ID as 128.6.171.3 then,  
 		// localPeer = peer[i]
 		
-		/** Start ProgramManager ("downloader" application thread) */
+		/** Start DownloadManager ("downloader" application thread) */
 		//blah blah
 		
 	}
