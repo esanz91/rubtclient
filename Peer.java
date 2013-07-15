@@ -6,7 +6,7 @@ import java.util.*;
 import java.nio.*;
 
 public class Peer {
-  
+	
     /**
      *It has methods to perform handshake, alive, interested, and other messages.
      */
@@ -23,9 +23,11 @@ public class Peer {
     
     /** BOOLEAN Connection status */
     public boolean connected = false;
+    public boolean handshakeConfirmed = false;
     
     public boolean[] booleanBitField = null;
     
+    /** BOOLEAN Peer Status */
     public boolean peerInterested;
     public boolean peerChoking;
 
@@ -40,15 +42,17 @@ public class Peer {
     final static int KEY_CANCEL = 8;
     final static int KEY_PORT = 9;
     
-    /**
-     * Set the byte arrays for the static peer messages 
-     */
-    final static byte[] interested = {0, 0, 0, 1, 2};
-    final static byte[] uninterested = {0, 0, 0, 1, 3};
+    /** Set the byte arrays for the static peer messages */
+    final static byte[] keep_alive = {0, 0, 0, 0};
     final static byte[] choke = {0, 0, 0, 1, 0};
     final static byte[] unchoke = {0, 0, 0, 1, 1};
+    final static byte[] interested = {0, 0, 0, 1, 2};
+    final static byte[] uninterested = {0, 0, 0, 1, 3};
+    final static byte[] have = {0, 0, 0, 5, 4};
+    final static byte[] request = {0, 0, 1, 3, 6};
+    final static byte[] piece = {0, 0, 0, 9, 7};
     final static byte[] empty_bitfield = {0, 0, 0, 2, 5, 0};
-    final static byte[] keep_alive = {0, 0, 0, 0};
+    
 
     
     
@@ -134,13 +138,18 @@ public class Peer {
     	try
     	{
     		peer2client.read(handshakeResponse);
+    		
+    		/** Extract peer ID from handshake response */
+    		//not yet
+    		
     		/** Extract info hash from handshake response */
         	System.arraycopy(handshakeResponse, 28, handshakeInfoHash, 0, 20);
         	
         	/** Verify if torrent info hash and handshake info hash are the identical */
             while(index < 20){
                 if(handshakeInfoHash[index] != trueInfoHash[index]){
-                	return false;
+                    peerSocket.close();
+                    return false;
                 }
                 else{
                     ++index;
@@ -152,6 +161,7 @@ public class Peer {
     		System.err.println("Could not read handshakeResponse. ");
     		
     	}
+    	handshakeConfirmed = true;
         return true;
     }
     
@@ -168,6 +178,197 @@ public class Peer {
     	}
     }
     
+    public void terminateSocketConnections(){
+    	try
+    	{
+    		if(!peerSocket.isClosed()){
+    			peerSocket.close();
+    			client2peer.close();
+    			peer2client.close();
+    		}
+    	}
+    	catch(Exception e)
+    	{
+    		System.err.println("ERROR: Could not terminate open socket connections. ");
+    	}
+    }
+    /* ================================================================================ */
+	/* 										Messages 									*/  
+	/* ================================================================================ */
+    /** Message: KEEP ALIVE */
+    public boolean keepAlive(){
+    	try{
+    		client2peer.write(keep_alive);
+    		client2peer.flush();
+    		
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent keepAlive message to " + peerID);
+			
+    		return true;
+    	}
+    	catch(IOException e){
+    		return false;	
+    	}
+    }
+    
+    /** Message: CHOKE */
+    public boolean choke(){
+    	try
+		{
+    		client2peer.write(choke);
+    		client2peer.flush();
+    		
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent choke message to " + peerID);
+			
+			peerChoking = true;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+			System.err.println("ERROR: Unable to send choke message. ");
+			return false;
+		} 
+    	catch(Exception e)
+		{
+			System.err.println("ERROR: Unable to send choke message. ");
+			return false;
+		}
+    }
+    
+    /** Message: UNCHOKE */
+    public boolean unchoke(){
+    	try
+		{
+    		client2peer.write(unchoke);
+    		client2peer.flush();
+
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent unchoke message to " + peerID);
+			
+    		peerChoking = false;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+			System.err.println("ERROR: Unable to send unchoke message. ");
+			return false;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to send choke message. ");
+			return false;
+		}
+    }
+    
+    /** Message: INTERESTED */
+    public boolean interested(){
+    	try
+		{
+    		client2peer.write(interested, 0, interested.length);
+    		client2peer.flush();
+
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent interested message to " + peerID);
+			
+			peerInterested = true;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+    		System.err.println("ERROR: Unable to send interested message. ");
+			return false;
+		} catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to send interested message. ");
+			return false;
+		}
+    }
+    
+    /** Message: Uninterested */
+    public boolean uninterested(){
+    	try
+		{
+    		client2peer.write(uninterested);
+    		client2peer.flush();
+    		
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent uninterested message to " + peerID);
+
+    		peerInterested = false;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+    		System.err.println("ERROR: Unable to send uninterested message. ");
+			return false;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to send uninterested message. ");
+			return false;
+		}
+    }
+    
+    /** Message: Have */
+    public boolean have(int piece_index){
+    	try
+		{
+			if(!peerSocket.isClosed()){
+				ByteBuffer haveByteBuffer = ByteBuffer.allocate(9);
+				haveByteBuffer.put(new byte[] {0,0,0,5,4});
+				haveByteBuffer.putInt(piece_index);
+				client2peer.write(haveByteBuffer.array());
+				client2peer.flush();
+
+				/* ================ */
+				/* Print Statements */
+				/* ================ */
+				System.out.println("Have message for piece " + piece_index + " sent to peer " + peerID);
+				return true;
+			}
+			else
+			{
+				System.err.println("Socket closed at " + peerID);
+				return false;
+			}
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+			System.err.println("ERROR: Unable to send have message to " + peerID);
+			return false;
+		}
+    	catch (Exception e)
+    	{
+    		System.err.println("ERROR: Unable to send have message to " + peerID);
+			return false;
+		}
+    }
+    
+    //Note: working on this
+    public boolean request(){
+    	return false;
+    }
+    
+    //Note: working on this
+    public boolean piece(){
+    	return false;
+    }
     /* ================================================================================ */
 	/* 									Set Methods										*/  
 	/* ================================================================================ */
