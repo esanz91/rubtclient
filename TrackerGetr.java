@@ -354,5 +354,4 @@ public class TrackerGetr {
 	public int getTrackerInterval(){
 		return trackerInterval;
 	}
-
 }
