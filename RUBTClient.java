@@ -156,15 +156,14 @@ public class RUBTClient {
 		System.out.println("Connecting to Tracker. ");
 		
 		/** Connects to tracker */         
-		tracker.connect(0,0,client.bytesRemaining, "started");
-		
-		/** Get peerList */
-		peer = tracker.getPeerList();
-		
+		Map trackerResponse = tracker.connect(0,0,client.bytesRemaining, "started");
+		if(trackerResponse == null){
+			System.err.println("ERROR: Could not capture tracker response. ");
+		}		
 		
 		/** Start DownloadManager ("downloader" application thread) */
 		DownloadManager downloader = new DownloadManager(client, tracker);
-		downloader.run();
+		downloader.start();
 		
 	}
 	
