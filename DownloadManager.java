@@ -28,8 +28,8 @@ public class DownloadManager {
 	private TrackerGetr tracker;
 	private TorrentInfo torrent;
 	private ArrayList<Peer> peerList;
-	private RUBTClient 					client;
-	private boolean 					stillRunning;
+	private RUBTClient client;
+	private boolean stillRunning;
 	
 
 	public DownloadManager(RUBTClient r,TrackerGetr t)
