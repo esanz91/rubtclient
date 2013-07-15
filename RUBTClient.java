@@ -161,13 +161,10 @@ public class RUBTClient {
 		/** Get peerList */
 		peer = tracker.getPeerList();
 		
-		/** Extract specific peer with ID: 128.6.171.3 */
-		// for(i = 0 ...
-		// if(peer[i] has same ID as 128.6.171.3 then,  
-		// localPeer = peer[i]
 		
 		/** Start DownloadManager ("downloader" application thread) */
-		//blah blah
+		DownloadManager downloader = new DownloadManager(client, tracker);
+		downloader.run();
 		
 	}
 	
