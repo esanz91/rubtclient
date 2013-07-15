@@ -213,6 +213,61 @@ public class Peer {
     	}
     }
     
+    /** Message: INTERESTED */
+    public boolean interested(){
+    	try
+		{
+    		client2peer.write(interested, 0, interested.length);
+    		client2peer.flush();
+
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent interested message to " + peerID);
+			
+			peerInterested = true;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+    		System.err.println("ERROR: Unable to send interested message. ");
+			return false;
+		} catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to send interested message. ");
+			return false;
+		}
+    }
+    
+    /** Message: Uninterested */
+    public boolean uninterested(){
+    	try
+		{
+    		client2peer.write(uninterested);
+    		client2peer.flush();
+    		
+    		/* ================ */
+			/* Print Statements */
+			/* ================ */
+			System.out.println("Sent uninterested message to " + peerID);
+
+    		peerInterested = false;
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+    		System.err.println("ERROR: Unable to send uninterested message. ");
+			return false;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to send uninterested message. ");
+			return false;
+		}
+    }
+    
     /** Message: CHOKE */
     public boolean choke(){
     	try
@@ -265,61 +320,6 @@ public class Peer {
 		catch (Exception e)
 		{
 			System.err.println("ERROR: Unable to send choke message. ");
-			return false;
-		}
-    }
-    
-    /** Message: INTERESTED */
-    public boolean interested(){
-    	try
-		{
-    		client2peer.write(interested, 0, interested.length);
-    		client2peer.flush();
-
-    		/* ================ */
-			/* Print Statements */
-			/* ================ */
-			System.out.println("Sent interested message to " + peerID);
-			
-			peerInterested = true;
-			return true;
-		} 
-    	catch (IOException e)
-		{
-    		terminateSocketConnections();
-    		System.err.println("ERROR: Unable to send interested message. ");
-			return false;
-		} catch (Exception e)
-		{
-			System.err.println("ERROR: Unable to send interested message. ");
-			return false;
-		}
-    }
-    
-    /** Message: Uninterested */
-    public boolean uninterested(){
-    	try
-		{
-    		client2peer.write(uninterested);
-    		client2peer.flush();
-    		
-    		/* ================ */
-			/* Print Statements */
-			/* ================ */
-			System.out.println("Sent uninterested message to " + peerID);
-
-    		peerInterested = false;
-			return true;
-		} 
-    	catch (IOException e)
-		{
-    		terminateSocketConnections();
-    		System.err.println("ERROR: Unable to send uninterested message. ");
-			return false;
-		}
-		catch (Exception e)
-		{
-			System.err.println("ERROR: Unable to send uninterested message. ");
 			return false;
 		}
     }
@@ -438,7 +438,7 @@ public class Peer {
     	return peerPort;
     }
     
-    /** Method: */
+    /** Method: get complete peer response */
     public byte[] getPeerResponse(int length)
 	{
 		try
@@ -460,6 +460,46 @@ public class Peer {
 			return null;
 		}
 	}
+    
+	/** Method: get byte response */
+	public synchronized byte getPeerResponseByte()
+	{
+		try
+		{
+			return peer2client.readByte();
+		} catch (IOException e)
+		{
+			terminateSocketConnections();
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return -1;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return -1;
+		}
+	}
+
+	/** Method: get int response */
+	public synchronized int getPeerResponseInt()
+	{
+		try
+		{
+			return peer2client.readInt();
+		} catch (IOException e)
+		{
+			terminateSocketConnections();
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return -1;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return -1;
+		}
+	}
+    
+    
     
     /* ================================================================================ */
 	/* 									Is Methods										*/  
