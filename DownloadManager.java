@@ -53,9 +53,14 @@ public class DownloadManager {
 		peer.sendHandshake(peer.peerID, torrent.info_hash);
 		
 		/* Receive handshake */
-		//blah blah blah
+		if(!peer.verifyHandshake(torrent.info_hash)){
+			System.err.println("ERROR: Unable to verify handshake. ");
+		}
+		else{
+			
+		}
 	}
-	
+
 	
 	/* +++++++++++++++++++++++++++++++ GET METHODS +++++++++++++++++++++++++++++++++++ */	
 	
