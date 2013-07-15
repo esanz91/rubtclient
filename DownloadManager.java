@@ -41,7 +41,20 @@ public class DownloadManager {
 		stillRunning = true;
 	}
 
-	/** METHODS */
+	/** METHOD: Running the program */
+	public void run(){
+		/* Extracts peer needed */
+		Peer peer = peerList.get(0);
+		
+		/* Set up connection with Peer */
+		peer.setPeerConnection();
+		
+		/* Establish handshake */
+		peer.sendHandshake(peer.peerID, torrent.info_hash);
+		
+		/* Receive handshake */
+		//blah blah blah
+	}
 	
 	
 	/* +++++++++++++++++++++++++++++++ GET METHODS +++++++++++++++++++++++++++++++++++ */	
