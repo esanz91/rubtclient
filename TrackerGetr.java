@@ -72,6 +72,9 @@ public class TrackerGetr {
 	/** keyPEER_PORT */
 	public static final ByteBuffer keyPEER_PORT = 
 		ByteBuffer.wrap(new byte[] { 'p','o', 'r', 't' });
+	
+	public static ByteBuffer keyFAILURE =  
+		ByteBuffer.wrap(new byte[] { 'f', 'a','i','l','u','r','e',' ','r','e','a','s','o','n'});
 
 	/* ================================================================================ */
 	/* 								Tracker Constructor									*/  
@@ -96,7 +99,7 @@ public class TrackerGetr {
 	/* 									METHODS  										*/  
 	/* ================================================================================ */
 
-	public void connect(int bytesDown, int bytesUp, int bytesRemaining, String event) throws IOException {
+	public Map connect(int bytesDown, int bytesUp, int bytesRemaining, String event) throws IOException {
 
 		/** Variables */
 		Socket trkSocket = null;
@@ -113,6 +116,7 @@ public class TrackerGetr {
 		if (trackerUrl == null)
 		{
 			System.err.println("Tracker was not created properly. ");
+			return null;
 		}
 
 		/** Open socket in order to communicate with tracker */
@@ -123,6 +127,7 @@ public class TrackerGetr {
 		catch(Exception e)
 		{
 			System.err.println("ERROR: Unable to create socket at " + trackerIP + ":" + trackerPort);
+			return null;
 		}
 
 		/** Create tracker HTTP URL connection */
@@ -134,6 +139,7 @@ public class TrackerGetr {
 		catch(Exception e)
 		{
 			System.err.println("ERROR: Unable to create HTTP URL Connection with tracker. ");
+			return null;
 		}
 
 		/** Receiving tracker response */
@@ -147,12 +153,16 @@ public class TrackerGetr {
 
 		} catch (IOException e) {
 			System.err.println("Caught IOException: " + e.getMessage());
+			return null;
 		}
 
 		/** Decoding tracker byte Array response to Map  */
 		try
 		{
 			trkMapResponse = (Map<ByteBuffer, Object>)Bencoder2.decode(trkDataByteArray); 
+			if(trkMapResponse.get(keyFAILURE) !=null){
+				return null;
+			}
 		}
 		catch(BencodingException e)
 		{
@@ -173,7 +183,7 @@ public class TrackerGetr {
 				System.err.println("Could not terminate connection with socket.");
 			}
 		}
-
+		return trkMapResponse;
 	}
 
 
