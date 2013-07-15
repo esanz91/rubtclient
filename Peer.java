@@ -329,10 +329,10 @@ public class Peer {
     	try
 		{
 			if(!peerSocket.isClosed()){
-				ByteBuffer haveByteBuffer = ByteBuffer.allocate(9);
-				haveByteBuffer.put(new byte[] {0,0,0,5,4});
-				haveByteBuffer.putInt(piece_index);
-				client2peer.write(haveByteBuffer.array());
+				ByteBuffer hByteBuffer = ByteBuffer.allocate(9);
+				hByteBuffer.put(new byte[] {0,0,0,5,4});
+				hByteBuffer.putInt(piece_index);
+				client2peer.write(hByteBuffer.array());
 				client2peer.flush();
 
 				/* ================ */
@@ -361,14 +361,39 @@ public class Peer {
     }
     
     //Note: working on this
-    public boolean request(){
-    	return false;
+    public boolean request(int position, int start, int size){
+    	try
+		{
+			ByteBuffer rByteBuffer = ByteBuffer.allocate(17);
+			rByteBuffer.put(new byte[] {0,0,0,13,6});
+			rByteBuffer.putInt(position);
+			rByteBuffer.putInt(start);
+			rByteBuffer.putInt(size);
+			client2peer.write(rByteBuffer.array());
+			client2peer.flush();
+			
+			
+			System.out.println("Sent request message. ");
+			return true;
+		} 
+    	catch (IOException e)
+		{
+    		terminateSocketConnections();
+    		System.err.println("ERROR: Unable to sent request message. ");
+			return false;
+		}
+    	catch (Exception e)
+		{
+    		System.err.println("ERROR: Unable to sent request message. ");
+			return false;
+		}
     }
     
     //Note: working on this
     public boolean piece(){
     	return false;
     }
+    
     /* ================================================================================ */
 	/* 									Set Methods										*/  
 	/* ================================================================================ */
@@ -413,6 +438,28 @@ public class Peer {
     	return peerPort;
     }
     
+    /** Method: */
+    public byte[] getPeerResponse(int length)
+	{
+		try
+		{
+			byte[] peerResponse = new byte[length];
+			peer2client.readFully(peerResponse);
+
+			return peerResponse;
+		} 
+		catch (IOException e)
+		{
+			terminateSocketConnections();
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return null;
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: Unable to receive peer response. ");
+			return null;
+		}
+	}
     
     /* ================================================================================ */
 	/* 									Is Methods										*/  
