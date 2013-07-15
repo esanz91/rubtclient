@@ -23,7 +23,7 @@ import java.util.Vector;
  */
 
 
-public class DownloadManager {
+public class DownloadManager extends Thread{
 
 	private TrackerGetr tracker;
 	private TorrentInfo torrent;
@@ -31,7 +31,6 @@ public class DownloadManager {
 	private RUBTClient client;
 	private boolean stillRunning;
 	
-
 	public DownloadManager(RUBTClient r,TrackerGetr t)
 	{
 		client = r;
@@ -50,14 +49,14 @@ public class DownloadManager {
 		peer.setPeerConnection();
 		
 		/* Establish handshake */
-		peer.sendHandshake(peer.peerID, torrent.info_hash);
+		peer.sendHandshake(client.getPeerId(), torrent.info_hash);
 		
-		/* Receive handshake */
+		/* Receive and verify handshake */
 		if(!peer.verifyHandshake(torrent.info_hash)){
 			System.err.println("ERROR: Unable to verify handshake. ");
 		}
 		else{
-			
+			int len = peer.getPeerResponseInt();
 		}
 	}
 
